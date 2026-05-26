@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Inventory Management System</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+
+    <style>
+        :root {
+            --primary:   #2563eb;
+            --primary-d: #1d4ed8;
+            --success:   #16a34a;
+            --danger:    #dc2626;
+            --warning:   #ca8a04;
+            --bg:        #f1f5f9;
+            --card:      #ffffff;
+            --text:      #1e293b;
+            --muted:     #64748b;
+            --border:    #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Navbar ─────────────────────────────── */
+        .navbar {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            box-shadow: 0 2px 12px rgba(37,99,235,.35);
+            padding: 0.85rem 1.5rem;
+        }
+        .navbar-brand {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -.3px;
+            color: #fff !important;
+        }
+        .navbar-brand i { margin-right: 8px; }
+
+        /* ── Stats cards ─────────────────────────── */
+        .stats-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.4rem 1.6rem;
+            box-shadow: 0 1px 6px rgba(0,0,0,.07);
+            border-left: 4px solid transparent;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .stats-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.11); }
+        .stats-card.blue  { border-left-color: var(--primary); }
+        .stats-card.green { border-left-color: var(--success); }
+        .stats-card.red   { border-left-color: var(--danger);  }
+        .stats-card.amber { border-left-color: var(--warning); }
+        .stats-card .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+        .stats-card .value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+        .stats-card .icon  { font-size: 2rem; opacity: .15; }
+
+        /* ── Main card ───────────────────────────── */
+        .main-card {
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.07);
+            overflow: hidden;
+        }
+        .main-card .card-header {
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            color: #fff;
+            padding: 1.1rem 1.5rem;
+            border: none;
+        }
+        .main-card .card-header h5 { font-weight: 600; margin: 0; }
+
+        /* ── Form ────────────────────────────────── */
+        .form-label { font-weight: 500; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+        .form-control, .form-select {
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: .55rem .85rem;
+            font-size: .93rem;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+            outline: none;
+        }
+
+        /* ── Buttons ─────────────────────────────── */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: .6rem 1.4rem;
+            font-weight: 600;
+            transition: opacity .2s, transform .15s;
+        }
+        .btn-primary-custom:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-reset {
+            background: #f1f5f9;
+            color: var(--text);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: .6rem 1.2rem;
+            font-weight: 600;
+        }
+        .btn-reset:hover { background: var(--border); }
+
+        /* ── Table ───────────────────────────────── */
+        .table-wrapper { overflow-x: auto; }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .91rem; }
+        thead th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            padding: .9rem 1rem;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+        tbody tr { transition: background .15s; }
+        tbody tr:hover { background: #f8fafc; }
+        tbody td {
+            padding: .85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        /* ── Badges ──────────────────────────────── */
+        .badge-qty {
+            padding: .3rem .7rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: .8rem;
+        }
+        .badge-ok  { background: #dcfce7; color: #16a34a; }
+        .badge-low { background: #fef9c3; color: #ca8a04; }
+        .badge-out { background: #fee2e2; color: #dc2626; }
+
+        /* ── Action buttons ──────────────────────── */
+        .btn-edit, .btn-del {
+            border: none;
+            border-radius: 6px;
+            padding: .35rem .7rem;
+            font-size: .82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+        .btn-edit { background: #dbeafe; color: #1d4ed8; }
+        .btn-edit:hover { background: #bfdbfe; }
+        .btn-del  { background: #fee2e2; color: #dc2626; }
+        .btn-del:hover  { background: #fecaca; }
+
+        /* ── Search bar ──────────────────────────── */
+        .search-box { position: relative; }
+        .search-box i {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+        .search-box input { padding-left: 2.2rem; }
+
+        /* ── Toast ───────────────────────────────── */
+        #toast-container {
+            position: fixed; top: 1.2rem; right: 1.2rem;
+            z-index: 9999; display: flex; flex-direction: column; gap: .5rem;
+        }
+        .toast-msg {
+            padding: .75rem 1.1rem;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 500;
+            font-size: .9rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,.18);
+            animation: slideIn .3s ease;
+            max-width: 320px;
+        }
+        .toast-success { background: var(--success); }
+        .toast-error   { background: var(--danger);  }
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        /* ── Modal ───────────────────────────────── */
+        .modal-content { border-radius: 14px; border: none; }
+        .modal-header  { background: linear-gradient(135deg, #1e40af, #2563eb); color: #fff; border-radius: 14px 14px 0 0; }
+        .modal-header .btn-close { filter: invert(1); }
+
+        /* ── Empty state ─────────────────────────── */
+        .empty-state {
+            text-align: center; padding: 3rem 1rem; color: var(--muted);
+        }
+        .empty-state i { font-size: 3rem; margin-bottom: .5rem; }
+
+        /* ── Loader ──────────────────────────────── */
+        #loader {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,.55); z-index: 8000;
+            align-items: center; justify-content: center;
+        }
+        #loader.show { display: flex; }
+
+        @media (max-width: 576px) {
+            .stats-card .value { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Loader ───────────────────────────────────── -->
+<div id="loader">
+    <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status"></div>
+</div>
+
+<!-- ── Toast container ──────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Navbar ───────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg">
+    <span class="navbar-brand"><i class="bi bi-boxes"></i>Inventory Manager</span>
+    <span class="ms-auto text-white-50" style="font-size:.85rem;">
+        <i class="bi bi-circle-fill text-success me-1" style="font-size:.5rem;"></i>
+        Connected to Spring Boot
+    </span>
+</nav>
+
+<div class="container-fluid py-4 px-4">
+
+    <!-- ── Stats row ──────────────────────────────── -->
+    <div class="row g-3 mb-4" id="stats-row">
+        <div class="col-6 col-md-3">
+            <div class="stats-card blue d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="label">Total Products</div>
+                    <div class="value text-primary" id="stat-total">—</div>
+                </div>
+                <i class="bi bi-box-seam icon"></i>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stats-card green">
+                <div class="label">Total Stock</div>
+                <div class="value text-success" id="stat-stock">—</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stats-card amber">
+                <div class="label">Inventory Value</div>
+                <div class="value" style="color:var(--warning);font-size:1.4rem;" id="stat-value">—</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stats-card red">
+                <div class="label">Low Stock Items</div>
+                <div class="value text-danger" id="stat-low">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ── Add / Edit Form ──────────────────── -->
+        <div class="col-lg-4">
+            <div class="main-card">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-plus-circle-fill"></i>
+                    <h5 id="form-title">Add New Product</h5>
+                </div>
+                <div class="p-4">
+                    <div id="edit-banner" class="alert alert-info d-none py-2 mb-3" style="font-size:.84rem;">
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Editing product <strong id="edit-id-label"></strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" id="pName" class="form-control" placeholder="e.g. Laptop Pro 15"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity *</label>
+                        <input type="number" id="pQty" class="form-control" placeholder="0" min="0"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Price (₹) *</label>
+                        <input type="number" id="pPrice" class="form-control" placeholder="0.00" min="0" step="0.01"/>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Supplier *</label>
+                        <input type="text" id="pSupplier" class="form-control" placeholder="e.g. Dell India"/>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn-primary-custom flex-fill" onclick="submitForm()">
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span id="submit-label">Add Product</span>
+                        </button>
+                        <button class="btn-reset" onclick="resetForm()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Products Table ───────────────────── -->
+        <div class="col-lg-8">
+            <div class="main-card">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <h5 class="m-0"><i class="bi bi-table me-2"></i>Products</h5>
+                    <div class="d-flex gap-2 align-items-center">
+                        <div class="search-box">
+                            <i class="bi bi-search" style="font-size:.85rem;"></i>
+                            <input type="text" id="searchInput" class="form-control form-control-sm"
+                                   placeholder="Search by name…" oninput="filterTable()"
+                                   style="width:180px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);color:#fff;"/>
+                        </div>
+                        <button class="btn btn-sm btn-light" onclick="loadProducts()" title="Refresh">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="productTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Qty</th>
+                                <th>Price (₹)</th>
+                                <th>Supplier</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="bi bi-hourglass-split d-block"></i>
+                                        Loading products…
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /row -->
+</div><!-- /container -->
+
+<!-- ── Delete Confirm Modal ──────────────────────── -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Delete</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3 text-center" style="font-size:.93rem;">
+                Are you sure you want to delete<br/><strong id="delete-name"></strong>?
+            </div>
+            <div class="modal-footer justify-content-center border-0 pt-0">
+                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm btn-danger" onclick="confirmDelete()">
+                    <i class="bi bi-trash me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // ── Config ──────────────────────────────────────
+    const API = 'http://localhost:8080/products';
+
+    // State
+    let editingId    = null;
+    let deleteId     = null;
+    let allProducts  = [];
+    let deleteModal;
+
+    // ── Init ─────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        loadProducts();
+    });
+
+    // ── Loader helpers ───────────────────────────────
+    const showLoader = () => document.getElementById('loader').classList.add('show');
+    const hideLoader = () => document.getElementById('loader').classList.remove('show');
+
+    // ── Toast ────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+        const c = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = `toast-msg toast-${type}`;
+        t.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : 'x-circle'} me-2"></i>${msg}`;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 3500);
+    }
+
+    // ── Load all products ─────────────────────────────
+    async function loadProducts() {
+        showLoader();
+        try {
+            const res  = await fetch(API);
+            const data = await res.json();
+            allProducts = data;
+            renderTable(data);
+            updateStats(data);
+        } catch (err) {
+            showToast('Cannot reach backend. Is Spring Boot running on port 8080?', 'error');
+            renderEmpty('Cannot connect to backend');
+        } finally {
+            hideLoader();
+        }
+    }
+
+    // ── Render table ──────────────────────────────────
+    function renderTable(products) {
+        const tbody = document.getElementById('tableBody');
+        if (!products.length) { renderEmpty('No products found'); return; }
+
+        tbody.innerHTML = products.map((p, i) => `
+            <tr>
+                <td style="color:var(--muted);font-size:.82rem;">${p.id}</td>
+                <td style="font-weight:600;">${esc(p.name)}</td>
+                <td><span class="badge-qty ${qtyClass(p.quantity)}">${p.quantity}</span></td>
+                <td>₹${p.price.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+                <td style="color:var(--muted);">${esc(p.supplier)}</td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <button class="btn-edit" onclick="startEdit(${p.id})">
+                            <i class="bi bi-pencil-fill me-1"></i>Edit
+                        </button>
+                        <button class="btn-del" onclick="askDelete(${p.id}, '${esc(p.name)}')">
+                            <i class="bi bi-trash-fill me-1"></i>Del
+                        </button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    }
+
+    function renderEmpty(msg) {
+        document.getElementById('tableBody').innerHTML = `
+            <tr><td colspan="6">
+                <div class="empty-state">
+                    <i class="bi bi-inbox d-block"></i>${msg}
+                </div>
+            </td></tr>`;
+    }
+
+    function qtyClass(q) {
+        if (q === 0) return 'badge-out';
+        if (q < 10)  return 'badge-low';
+        return 'badge-ok';
+    }
+
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    // ── Stats ─────────────────────────────────────────
+    function updateStats(products) {
+        document.getElementById('stat-total').textContent = products.length;
+        const stock = products.reduce((a, p) => a + p.quantity, 0);
+        document.getElementById('stat-stock').textContent = stock.toLocaleString('en-IN');
+        const value = products.reduce((a, p) => a + p.price * p.quantity, 0);
+        document.getElementById('stat-value').textContent =
+            '₹' + value.toLocaleString('en-IN', {maximumFractionDigits: 0});
+        const low = products.filter(p => p.quantity < 10).length;
+        document.getElementById('stat-low').textContent = low;
+    }
+
+    // ── Search / filter ───────────────────────────────
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        renderTable(q ? allProducts.filter(p => p.name.toLowerCase().includes(q)) : allProducts);
+    }
+
+    // ── Form: get values ──────────────────────────────
+    function getFormValues() {
+        return {
+            name:     document.getElementById('pName').value.trim(),
+            quantity: parseInt(document.getElementById('pQty').value),
+            price:    parseFloat(document.getElementById('pPrice').value),
+            supplier: document.getElementById('pSupplier').value.trim()
+        };
+    }
+
+    function validateForm(p) {
+        if (!p.name)              return 'Product name is required.';
+        if (isNaN(p.quantity) || p.quantity < 0)  return 'Quantity must be ≥ 0.';
+        if (isNaN(p.price)    || p.price <= 0)    return 'Price must be > 0.';
+        if (!p.supplier)          return 'Supplier is required.';
+        return null;
+    }
+
+    // ── Submit form ───────────────────────────────────
+    async function submitForm() {
+        const p = getFormValues();
+        const err = validateForm(p);
+        if (err) { showToast(err, 'error'); return; }
+
+        showLoader();
+        try {
+            const url    = editingId ? `${API}/${editingId}` : API;
+            const method = editingId ? 'PUT' : 'POST';
+            const res    = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(p)
+            });
+
+            if (!res.ok) {
+                const e = await res.json();
+                throw new Error(e.error || 'Request failed');
+            }
+
+            showToast(editingId ? 'Product updated!' : 'Product added!');
+            resetForm();
+            loadProducts();
+        } catch (e) {
+            showToast(e.message, 'error');
+        } finally {
+            hideLoader();
+        }
+    }
+
+    // ── Edit ──────────────────────────────────────────
+    async function startEdit(id) {
+        showLoader();
+        try {
+            const res = await fetch(`${API}/${id}`);
+            if (!res.ok) throw new Error('Product not found');
+            const p = await res.json();
+
+            document.getElementById('pName').value     = p.name;
+            document.getElementById('pQty').value      = p.quantity;
+            document.getElementById('pPrice').value    = p.price;
+            document.getElementById('pSupplier').value = p.supplier;
+
+            editingId = id;
+            document.getElementById('form-title').textContent   = 'Edit Product';
+            document.getElementById('submit-label').textContent = 'Update Product';
+            document.getElementById('edit-banner').classList.remove('d-none');
+            document.getElementById('edit-id-label').textContent = `#${id} — ${p.name}`;
+            document.getElementById('pName').focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) {
+            showToast(e.message, 'error');
+        } finally {
+            hideLoader();
+        }
+    }
+
+    // ── Reset form ────────────────────────────────────
+    function resetForm() {
+        ['pName','pQty','pPrice','pSupplier'].forEach(id =>
+            document.getElementById(id).value = '');
+        editingId = null;
+        document.getElementById('form-title').textContent   = 'Add New Product';
+        document.getElementById('submit-label').textContent = 'Add Product';
+        document.getElementById('edit-banner').classList.add('d-none');
+    }
+
+    // ── Delete ────────────────────────────────────────
+    function askDelete(id, name) {
+        deleteId = id;
+        document.getElementById('delete-name').textContent = name;
+        deleteModal.show();
+    }
+
+    async function confirmDelete() {
+        deleteModal.hide();
+        showLoader();
+        try {
+            const res = await fetch(`${API}/${deleteId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Delete failed');
+            showToast('Product deleted successfully.');
+            loadProducts();
+            if (editingId === deleteId) resetForm();
+        } catch (e) {
+            showToast(e.message, 'error');
+        } finally {
+            hideLoader();
+            deleteId = null;
+        }
+    }
+</script>
+</body>
+</html>
